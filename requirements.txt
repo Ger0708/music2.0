@@ -1,5 +1,5 @@
 streamlit
 pandas
 scikit-learn
-yt-dlp
+yt-dlp>=2025.01.26
 google-api-python-client

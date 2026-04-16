@@ -45,21 +45,24 @@ def search_youtube(query):
 
 def process_audio(video_url):
     unique_filename = f"music_{uuid.uuid4().hex}.mp3"
-    
-    # 嘗試尋找系統中的 ffmpeg 路徑 (解決 "not found" 錯誤)
     import shutil
     ffmpeg_bin = shutil.which("ffmpeg") 
     
     try:
+        # 這裡加入偽裝瀏覽器的參數
         cmd = [
             "yt-dlp", 
             "-x", 
             "--audio-format", "mp3", 
-            "--no-check-certificates", 
+            "--no-check-certificates",
+            # --- 以下是修復 403 的關鍵參數 ---
+            "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "--extractor-args", "youtube:player_client=web_creator,mweb", 
+            "--no-cache-dir",
+            # -------------------------------
             "-o", unique_filename
         ]
         
-        # 如果系統有找到 ffmpeg，就明確告訴 yt-dlp 它的位置
         if ffmpeg_bin:
             cmd.extend(["--ffmpeg-location", ffmpeg_bin])
             
@@ -68,8 +71,8 @@ def process_audio(video_url):
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
-            st.error("❌ 轉碼失敗，詳細錯誤如下：")
-            st.code(result.stderr)
+            st.error("❌ 下載被攔截 (403 Error)，請稍後再試或換一首歌。")
+            st.code(result.stderr) # 顯示詳細報錯供後續除錯
             return None
             
         return unique_filename
